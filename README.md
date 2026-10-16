@@ -4,9 +4,7 @@
 > **一条胶囊，统管三类计费：中转站余额、官方充值账号、Coding Plan 订阅额度。**
 
 <p align="center">
-  <img src="docs/screenshot-pill.png" width="140" alt="额度胶囊"/>
-  &nbsp;&nbsp;&nbsp;
-  <img src="docs/screenshot-card.png" width="360" alt="悬停详情卡片"/>
+  <img src="docs/screenshot-hero.png" width="420" alt="额度胶囊与悬停详情卡片（codex 双窗口 + 重置时间）"/>
 </p>
 
 ## 这是什么

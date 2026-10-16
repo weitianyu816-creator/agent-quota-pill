@@ -91,7 +91,7 @@ def _reset_abs(w):
         try: dt = _dt.datetime.fromtimestamp(ts / 1000.0).astimezone()
         except (OverflowError, OSError, ValueError): dt = None
     if dt is None and w.get("reset_after_seconds"):
-        dt = _dt.datetime.now().astimezone() + _dt.timedelta(int(w["reset_after_seconds"]))
+        dt = _dt.datetime.now().astimezone() + _dt.timedelta(seconds=int(w["reset_after_seconds"]))
     return "%d月%d日 %02d:%02d" % (dt.month, dt.day, dt.hour, dt.minute) if dt else None
 
 def used_pct(idx, p):
