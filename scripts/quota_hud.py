@@ -19,7 +19,7 @@ quota_hud.py —— Windows 终端「AI CLI 套餐额度聚合面板」
              {used_percent, reset_after_seconds}
   3) cmdc（Command Code GOAT）
        凭据：环境变量 COMMAND_CODE_API_KEY（进程内直接取，用户级已设）。
-       端点（国内直连，写死不走代理）：
+       端点（境外服务，走配置的代理，2026-10-16 实测直连 TLS 4.5s+且间歇失败、代理 0.4s）：
          GET https://api.commandcode.ai/alpha/billing/credits
          GET https://api.commandcode.ai/alpha/usage/summary（可选增强：累计）
        响应：credits.monthlyCredits（月度余额）+ windowLimits.fiveHour/weekly
@@ -46,7 +46,7 @@ quota_hud.py —— Windows 终端「AI CLI 套餐额度聚合面板」
 代理
   opencode 与 chatgpt 两请求默认走 http://127.0.0.1:7897；
   可用环境变量 QUOTA_HUD_PROXY 或 --proxy 覆盖，--no-proxy 关闭。超时统一 20 秒。
-  注意：cmdc 与 bb-api（claude）为国内直连源，--proxy / --no-proxy 对其不生效，
+  注意：bb-api（claude）为国内直连源不受 --proxy 影响；cmdc 走代理（实测直连不稳定），
         代码内写死不走代理（见 fetch_cmdc / fetch_bbapi 内的 ProxyHandler({})）。
 
 维护方式
@@ -312,8 +312,8 @@ def _read_bbapi_key():
 
 
 def fetch_cmdc(proxy):
-    """Command Code GOAT：billing/credits（+ 可选 usage/summary）。国内直连。"""
-    # 国内直连源：忽略上层 proxy 设置（--proxy / --no-proxy 不生效），写死不走代理。
+    """Command Code GOAT：billing/credits（+ 可选 usage/summary）。走配置代理。"""
+    # 境外源：走上层 proxy（2026-10-16 实测直连不可用，必须代理）。
     key = _read_cmdc_key()
     headers = {
         "Authorization": "Bearer %s" % key,
@@ -321,7 +321,7 @@ def fetch_cmdc(proxy):
         "User-Agent": "opencode-quota-hud/1.1",
     }
     payload = http_get_json(
-        "https://api.commandcode.ai/alpha/billing/credits", headers, None
+        "https://api.commandcode.ai/alpha/billing/credits", headers, proxy
     )
     credits = payload.get("credits") or {}
     window_limits = payload.get("windowLimits") or {}
@@ -353,7 +353,7 @@ def fetch_cmdc(proxy):
     # 可选增强：累计用量/请求数（失败不影响主数据）
     try:
         summary = http_get_json(
-            "https://api.commandcode.ai/alpha/usage/summary", headers, None
+            "https://api.commandcode.ai/alpha/usage/summary", headers, proxy
         )
         result["total_cost"] = round(float(summary.get("totalCost", 0) or 0), 2)
         result["total_count"] = summary.get("totalCount")
